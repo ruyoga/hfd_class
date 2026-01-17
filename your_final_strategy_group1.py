@@ -156,3 +156,4 @@ for quarter in quarters:
 
 # save the summary for all quarters to a csv file
 summary_data1_all_quarters.to_csv('summary_data1_all_quarters.csv', index=False)
+#%%
