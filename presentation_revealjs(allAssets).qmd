@@ -11,7 +11,7 @@ format:
 
 ## Approaches Undertaken - Group 1 {.smaller}
 
-::: {style="font-size: 0.70em;"}
+::: {style="font-size: 0.65em;"}
 
 ### Strategy: Volatility-Adaptive Pair Trading (SP vs. NQ)
 This strategy utilizes a Statistical Arbitrage approach, trading the log-price spread between SP and NQ futures. It incorporates dynamic hedge ratios, volatility-adjusted entry signals, and microstructure filters (cooldown/time filters) to account for high-frequency market noise.
@@ -31,7 +31,7 @@ We followed a systematic process to select the "Best Strategy" for the final pre
 
 :::
 
-## Approaches Undertaken - Group 2 {.smaller}
+## Approaches Undertaken - Group 2 (XAU vs. XAG) {.smaller}
 
 ::: {style="font-size: 0.75em;"}
 
@@ -52,6 +52,26 @@ Our optimization process for the "Best Strategy" involved:
 
 :::
 
+## Approaches Undertaken - Group 2 (CAD vs. AUD) {.smaller}
+
+::: {style="font-size: 0.75em;"}
+
+### Strategy: Daily Relative Momentum (CAD vs. AUD)
+This strategy utilizes a daily-frequency relative momentum approach between Canadian Dollar (CAD) and Australian Dollar (AUD). It rotates exposure to the currency showing stronger short-term price performance while incorporating a specific confidence filter for AUD trades.
+
+### 1. Parameters Considered (**WHAT**)
+To capture the most effective daily price trends, we explored the following parameters:
+
+* **Momentum Window ($M$):** We tested various windows from intra-day to multi-week. We selected **276 bars (approx. 1 trading day)** to capture immediate price shifts in the currency market.
+* **Rebalance Frequency ($R$):** We matched the rebalance cycle to the momentum window of **276 bars**. This ensures the portfolio is updated daily to reflect the most recent relative strength between assets.
+* **AUD Confidence Threshold:** Due to AUD's inherent volatility, we applied a **0.05 (5%) threshold**. AUD is only traded if its momentum significantly deviates from CAD's, effectively filtering out noisy signals.
+
+### 2. Search Method (**HOW**)
+Our optimization process for the "Best Strategy" involved:
+
+* **Iterative Testing:** We performed iterative testing across multiple time horizons, transitioning from medium-term (15-day) to short-term (1-day) windows to maximize the required Summary Statistic.
+
+:::
 
 ## Finally selected strategy for **group 1** {.smaller}
 ::: {style="font-size: 0.75em;"}
@@ -69,7 +89,6 @@ A pair trading strategy focusing on the mean-reversion of the spread between S&P
         * **Time Filter:** No new trades before **10:00 CET** to avoid market-open noise.
         * **Cooldown:** **30-minute lock-out** after each exit to prevent "over-trading" during volatile reversals.
 :::
-
 ```{python}
 #| echo: false
 #| output: false
@@ -78,7 +97,6 @@ runpy.run_path("final_strategy_group1.py")
 ```
 
 ## Summary of results for **group 1**
-
 ```{python}
 #| echo: false
 # import the csv file with strategy results
@@ -105,7 +123,6 @@ styled_table
 * **The Challenge:** 2024 was difficult, particularly Q2, suggesting a structural divergence between the Tech sector (NQ) and the broader market (SP) that broke the cointegration assumption.
 
 ## Equity line for **group 1** -- 2023Q1
-
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -118,7 +135,6 @@ Image(filename="data1_2023_Q1.png")
 * **Metric:** It achieved the highest Net Sharpe Ratio of the entire backtest (2.20), validating the core logic.
 
 ## Equity line for **group 1** -- 2023Q3
-
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -131,7 +147,6 @@ Image(filename="data1_2023_Q3.png")
 * **Defense:** Despite the difficulty, the strict strict trading hours (avoiding the first 25 mins) helped keep the Net PnL flat rather than significantly negative.
 
 ## Equity line for **group 1** -- 2023Q4
-
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -142,7 +157,6 @@ Image(filename="data1_2023_Q4.png")
 * **Stabilization:** Performance improved significantly here (Net SR 1.18).
 * **Pattern:** You can see a "step-like" equity growth. This indicates our volatility filters are working—keeping us out of the market during noise and only entering when the signal is clear.
 ## Equity line for **group 1** -- 2024Q2
-
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -155,7 +169,6 @@ Image(filename="data1_2024_Q2.png")
 * **Result:** The strategy faced repeated stop-outs. While painful, this highlights the risk of structural breaks in pairs trading.
 
 ## Equity line for **group 1** -- 2024Q4
-
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -168,7 +181,6 @@ Image(filename="data1_2024_Q4.png")
 * **Takeaway:** It finished slightly negative, reinforcing that 2024 was generally a hostile environment for this specific pair correlation.
 
 ## Equity line for **group 1** -- 2025Q1
-
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -180,7 +192,6 @@ Image(filename="data1_2025_Q1.png")
 * **Interpretation:** The market lacked sufficient mean-reverting volatility. The PnL hovered near zero, meaning the strategy essentially "sat on the sidelines" protecting capital during a lack of opportunity.
 
 ## Equity line for **group 1** -- 2025Q2
-
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -191,7 +202,8 @@ Image(filename="data1_2025_Q2.png")
 * **The Recovery:** A strong return to profitability (Net SR 1.72, Net PnL ~4,700).
 * **Significance:** This quarter proves the strategy is not "broken"—it simply requires a correlated market environment.
 * **Outcome:** The logic successfully captured the re-convergence of the indices, recovering a significant portion of the previous year's drawdown.
-## Finally selected strategy for **group 2**
+
+## Finally selected strategy for **group 2** (XAU vs. XAG)
 
 **Strategy: Precious Metals Daily Rotation (XAU vs. XAG)**
 
@@ -205,7 +217,6 @@ A relative strength strategy that reallocates capital between Gold and Silver on
     * **Signal Logic:**
         * **XAU:** Long if $Mom_{XAU} > Mom_{XAG}$, otherwise Short.
         * **XAG:** Only takes a position if the momentum difference exceeds the 5% threshold; otherwise remains flat.
-  
 ```{python}
 #| echo: false
 #| output: false
@@ -213,8 +224,7 @@ import runpy
 runpy.run_path("final_strategy_group2(XAUandXAG).py")
 ```
 
-## Summary of results for **group 2**
-
+## Summary of results for **group 2** (XAU vs. XAG)
 ```{python}
 #| echo: false
 # import the csv file with strategy results
@@ -240,8 +250,7 @@ styled_table
 * **Performance:** While 2023 struggled with low Sharpe Ratios (below 0.5), the strategy adapted significantly in 2024 and 2025, consistently achieving Net Sharpe Ratios above 2.0.
 * **Total Impact:** The strategy generated significant profits in the later sample, with 2024 Q4 alone contributing over 20,000 in Net PnL.
 
-## Equity line for **group 2** -- 2023Q1
-
+## Equity line for **group 2** (XAU vs. XAG) -- 2023Q1
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -253,8 +262,7 @@ Image(filename="data2_2023_Q1(XAUandXAG).png")
 * **Behavior:** The equity curve is erratic, indicating the market lacked a sustained direction for our signals to exploit.
 * **Result:** High transaction costs ate into gross profits, resulting in a Net SR of only 0.27. This confirms why additional filtering (like the cooldown periods) is necessary during undefined trends.
 
-## Equity line for **group 2** -- 2023Q3
-
+## Equity line for **group 2** (XAU vs. XAG) -- 2023Q3
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -266,8 +274,7 @@ Image(filename="data2_2023_Q3(XAUandXAG).png")
 * **Analysis:** After early gains in July, the market shifted to a choppy, adverse regime in August and September.
 * **Result:** The strategy suffered from "whipsaw" price action, erasing early profits and ending slightly negative. This highlights the need for the volatility filters we implemented later.
 
-## Equity line for **group 2** -- 2023Q4
-
+## Equity line for **group 2** (XAU vs. XAG) -- 2023Q4
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -279,8 +286,7 @@ Image(filename="data2_2023_Q4(XAUandXAG).png")
 * **Behavior:** The strategy remained flat (neutral) for the majority of the period, adhering to strict entry conditions.
 * **Outcome:** A sudden volatility breakout in late December triggered a trade. While it captured a sharp spike, the subsequent reversal caused a drawdown, ending with a modest profit.
 
-## Equity line for **group 2** -- 2024Q2
-
+## Equity line for **group 2** (XAU vs. XAG) -- 2024Q2
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -292,8 +298,7 @@ Image(filename="data2_2024_Q2(XAUandXAG).png")
 * **Behavior:** We see consistent capital growth. Although there was a drawdown period in mid-May, the strategy recovered quickly.
 * **Outcome:** This was one of the most robust quarters, generating nearly 18,000 in Net PnL with a solid Calmar Ratio of 4.40.
 
-## Equity line for **group 2** -- 2024Q4
-
+## Equity line for **group 2** (XAU vs. XAG) -- 2024Q4
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -305,8 +310,7 @@ Image(filename="data2_2024_Q4(XAUandXAG).png")
 * **Behavior:** The equity curve shows a steady, consistent upward trend ("staircase" pattern).
 * **Resilience:** A sharp drawdown occurred in mid-November, but the strategy's risk management logic allowed for an immediate V-shaped recovery to new highs.
 
-## Equity line for **group 2** -- 2025Q1
-
+## Equity line for **group 2** (XAU vs. XAG) -- 2025Q1
 ```{python}
 #| echo: false
 #| out-width: 100%
@@ -318,13 +322,143 @@ Image(filename="data2_2025_Q1(XAUandXAG).png")
 * **Behavior:** The strategy successfully avoided false signals during the quiet period (preserving capital).
 * **Outcome:** A massive trend emerged in the final week of March. The strategy captured this move perfectly, resulting in a vertical equity spike and a high Net SR of 2.25 despite the low trade count.
 
-## Equity line for **group 2** -- 2025Q2
-
+## Equity line for **group 2** (XAU vs. XAG) -- 2025Q2
 ```{python}
 #| echo: false
 #| out-width: 100%
 from IPython.display import Image
 Image(filename="data2_2025_Q2(XAUandXAG).png")
+```
+
+* **Market Context:** A highly volatile period with large price swings.
+* **Behavior:** The strategy faced significant turbulence in April and May, resulting in deep drawdowns.
+* **Recovery:** However, the logic held together; the strategy capitalized on the June trends to recover all losses and finish the quarter near equity highs (Net PnL ~19,000).
+
+## Finally selected strategy for **group 2** (CAD vs. AUD)
+
+**Strategy: Currency Daily Rotation (CAD vs. AUD)**
+
+A relative strength strategy that reallocates capital between Canadian Dollar and Australian Dollar on a daily basis. The model identifies the stronger trending currency while using a widening threshold to manage the higher risk profile of AUD.
+
+* **Approach:** Daily Relative Momentum with a 5% Confidence Filter.
+* **Final Parameters:**
+    * **Momentum Window ($M$):** 276 bars (approx. 1 trading day).
+    * **Rebalance Frequency ($R$):** 276 bars (daily rebalancing).
+    * **AUD Confidence Threshold:** 0.05 (5%). AUD is only selected if $|Mom_{AUD} - Mom_{CAD}| > 0.05$.
+    * **Signal Logic:**
+        * **CAD:** Long if $Mom_{CAD} > Mom_{AUD}$, otherwise Short.
+        * **AUD:** Only takes a position if the momentum difference exceeds the 5% threshold; otherwise remains flat.
+```{python}
+#| echo: false
+#| output: false
+import runpy
+runpy.run_path("final_strategy_group2(CADandAUD).py")
+```
+
+## Summary of results for **group 2** (CAD vs. AUD)
+```{python}
+#| echo: false
+# import the csv file with strategy results
+import pandas as pd
+summary_data2_all_quarters = pd.read_csv("summary_data2_all_quarters(CADandAUD).csv")
+
+# Format the table
+numeric_cols = summary_data2_all_quarters.select_dtypes(include=['float', 'int']).columns
+styled_table = (
+    summary_data2_all_quarters.style
+    .format("{:.2f}", subset=numeric_cols)   # format numbers only
+    .set_properties(**{"text-align": "right"})
+    .set_table_styles([
+        {"selector": "th", "props": [("font-size", "16px")]},
+        {"selector": "td", "props": [("font-size", "16px")]}
+    ])
+    .hide(axis="index")   # << hides the index
+)
+styled_table
+```
+
+* **Key Observation:** There is a distinct regime shift in performance between 2023 and the later years.
+* **Performance:** While 2023 struggled with low Sharpe Ratios (below 0.5), the strategy adapted significantly in 2024 and 2025, consistently achieving Net Sharpe Ratios above 2.0.
+* **Total Impact:** The strategy generated significant profits in the later sample, with 2024 Q4 alone contributing over 20,000 in Net PnL.
+
+## Equity line for **group 2** (CAD vs. AUD) -- 2023Q1
+```{python}
+#| echo: false
+#| out-width: 100%
+from IPython.display import Image
+Image(filename="data2_2023_Q1(CADandAUD).png")
+```
+
+* **Observation:** A noisy start to the backtest period.
+* **Behavior:** The equity curve is erratic, indicating the market lacked a sustained direction for our signals to exploit.
+* **Result:** High transaction costs ate into gross profits, resulting in a Net SR of only 0.27. This confirms why additional filtering (like the cooldown periods) is necessary during undefined trends.
+
+## Equity line for **group 2** (CAD vs. AUD) -- 2023Q3
+```{python}
+#| echo: false
+#| out-width: 100%
+from IPython.display import Image
+Image(filename="data2_2023_Q3(CADandAUD).png")
+```
+
+* **Challenge:** This was the most difficult quarter for the strategy (The "Drawdown Quarter").
+* **Analysis:** After early gains in July, the market shifted to a choppy, adverse regime in August and September.
+* **Result:** The strategy suffered from "whipsaw" price action, erasing early profits and ending slightly negative. This highlights the need for the volatility filters we implemented later.
+
+## Equity line for **group 2** (CAD vs. AUD) -- 2023Q4
+```{python}
+#| echo: false
+#| out-width: 100%
+from IPython.display import Image
+Image(filename="data2_2023_Q4(CADandAUD).png")
+```
+
+* **Market Context:** A largely dormant quarter with very low volatility for the first two months.
+* **Behavior:** The strategy remained flat (neutral) for the majority of the period, adhering to strict entry conditions.
+* **Outcome:** A sudden volatility breakout in late December triggered a trade. While it captured a sharp spike, the subsequent reversal caused a drawdown, ending with a modest profit.
+
+## Equity line for **group 2** (CAD vs. AUD) -- 2024Q2
+```{python}
+#| echo: false
+#| out-width: 100%
+from IPython.display import Image
+Image(filename="data2_2024_Q2(CADandAUD).png")
+```
+
+* **Market Context:** A strong trending environment favorable to the strategy.
+* **Behavior:** We see consistent capital growth. Although there was a drawdown period in mid-May, the strategy recovered quickly.
+* **Outcome:** This was one of the most robust quarters, generating nearly 18,000 in Net PnL with a solid Calmar Ratio of 4.40.
+
+## Equity line for **group 2** (CAD vs. AUD) -- 2024Q4
+```{python}
+#| echo: false
+#| out-width: 100%
+from IPython.display import Image
+Image(filename="data2_2024_Q4(CADandAUD).png")
+```
+
+* **Highlight:** This is the best-performing quarter in the dataset (Net SR 2.05, Highest Stat 4.72).
+* **Behavior:** The equity curve shows a steady, consistent upward trend ("staircase" pattern).
+* **Resilience:** A sharp drawdown occurred in mid-November, but the strategy's risk management logic allowed for an immediate V-shaped recovery to new highs.
+
+## Equity line for **group 2** (CAD vs. AUD) -- 2025Q1
+```{python}
+#| echo: false
+#| out-width: 100%
+from IPython.display import Image
+Image(filename="data2_2025_Q1(CADandAUD).png")
+```
+
+* **Market Context:** Similar to 2023 Q4, this period lacked clear signals for the first 2.5 months.
+* **Behavior:** The strategy successfully avoided false signals during the quiet period (preserving capital).
+* **Outcome:** A massive trend emerged in the final week of March. The strategy captured this move perfectly, resulting in a vertical equity spike and a high Net SR of 2.25 despite the low trade count.
+
+## Equity line for **group 2** (CAD vs. AUD) -- 2025Q2
+```{python}
+#| echo: false
+#| out-width: 100%
+from IPython.display import Image
+Image(filename="data2_2025_Q2(CADandAUD).png")
 ```
 
 * **Market Context:** A highly volatile period with large price swings.
