@@ -19,8 +19,8 @@ This strategy utilizes a Statistical Arbitrage approach, trading the log-price s
 ### 1. Parameters Considered (**WHAT**)
 To ensure robustness across different in-sample quarters and maximize the required Summary Statistic, we explored several dimensions:
 
-* **Hedge Ratio Dynamics ($B$):** We tested both fixed beta and **Dynamic Beta (1.5 day)**. The rolling covariance/variance ratio was chosen to capture the evolving structural relationship between the two indices.
-* **Mean Reversion Memory ($W$):** We evaluated lookback windows for the Z-Score from **30min to 60min**. A **shorter 45min window** was finally selected to respond rapidly to mean-reversion opportunities in 1-minute frequency data.
+* **Hedge Ratio Dynamics :** We tested both fixed beta and **Dynamic Beta (1.5 day)**. The rolling covariance/variance ratio was chosen to capture the evolving structural relationship between the two indices.
+* **Mean Reversion Memory :** We evaluated lookback windows for the Z-Score from **30min to 60min**. A **shorter 45min window** was finally selected to respond rapidly to mean-reversion opportunities in 1-minute frequency data.
 * **Adaptive Sensitivity (0.5):** This parameter dynamically adjusts entry criteria based on market conditions. It calculates the ratio of **current volatility** to its historical baseline. When volatility spikes, the 0.5 sensitivity factor widens the entry bands, effectively raising the bar to prevent false signals during noisy, high-volatility periods.
 * **Risk Controls:** We enforce a **30-minute Cooldown** to prevent rapid re-entry after an exit. Furthermore, a **Strict Stop-Loss (5.0 Z)** serves as a "hard exit" mechanism, immediately cutting positions if the price spread deviates extremely (beyond 5 standard deviations), protecting capital from fundamental breakdowns in the correlation (regime shifts).
 
@@ -40,8 +40,8 @@ This strategy utilizes a daily-frequency relative momentum approach between Gold
 ### 1. Parameters Considered (**WHAT**)
 To capture the most effective daily price trends, we explored the following parameters:
 
-* **Momentum Window ($M$):** We tested various windows from intra-day to multi-week. We selected **1 trading day** to capture immediate price shifts in the market.
-* **Rebalance Frequency ($R$):** We matched the rebalance cycle to the momentum window of **1 trading day**. This ensures the portfolio is updated daily to reflect the most recent relative strength between assets.
+* **Momentum Window :** We tested various windows from intra-day to multi-week. We selected **1 trading day** to capture immediate price shifts in the market.
+* **Rebalance Frequency :** We matched the rebalance cycle to the momentum window of **1 trading day**. This ensures the portfolio is updated daily to reflect the most recent relative strength between assets.
 * **Silver Confidence Threshold:** Due to Silver's inherent volatility, we applied a **5% threshold**. Silver is only traded if its momentum significantly deviates from Gold's, effectively filtering out noisy signals.
 
 ### 2. Search Method (**HOW**)
@@ -57,15 +57,14 @@ Our optimization process for the "Best Strategy" involved:
 
 **Strategy: Adaptive Volatility Spread Strategy (SP vs. NQ)**
 
-A pair trading strategy focusing on the mean-reversion of the spread between S&P 500 and NASDAQ futures. It employs a dynamic hedge ratio and an adaptive entry mechanism, enhanced by microstructure filters to minimize transaction cost impact.
+A pair trading strategy focusing on the mean-reversion of the spread between S&P 500 and NASDAQ futures. It employs a dynamic hedge ratio and an adaptive entry mechanism.
 
 * **Approach:** Statistical Arbitrage with Dynamic Beta, Volatility-Adjusted Z-Score Bands, and Cooldown Filtering.
 * **Final Parameters:**
-    * **Z-Score Window ($W$):** 45 bars.
-    * **Dynamic Beta Window ($B$):** 600 bars.
+    * **Z-Score Window :** 45 min.
+    * **Dynamic Beta Window :** 1.5 days.
     * **Entry/Exit Logic:** * **Base Entry:** $|Z| > 3.0$ (Strict threshold to ensure edge over costs).
         * **Exit:** $Z$ crosses 0.0 or **Stop-Loss at $|Z| > 5.0$**.
-        * **Time Filter:** No new trades before **10:00 CET** to avoid market-open noise.
         * **Cooldown:** **30-minute lock-out** after each exit to prevent "over-trading" during volatile reversals.
 :::
 
@@ -192,13 +191,13 @@ Image(filename="data1_2025_Q2.png")
 
 **Strategy: Precious Metals Daily Rotation (XAU vs. XAG)**
 
-A relative strength strategy that reallocates capital between Gold and Silver on a daily basis. The model identifies the stronger trending asset while using a widening threshold to manage the higher risk profile of Silver.
+A relative strength strategy that reallocates capital between Gold and Silver  on a daily basis. The model identifies the stronger trending asset while using a widening threshold to manage the higher risk profile of Silver.
 
 * **Approach:** Daily Relative Momentum with a 5% Confidence Filter.
 * **Final Parameters:**
-    * **Momentum Window ($M$):** 276 bars (approx. 1 trading day).
-    * **Rebalance Frequency ($R$):** 276 bars (daily rebalancing).
-    * **Silver Confidence Threshold:** 0.05 (5%). XAG is only selected if $|Mom_{XAG} - Mom_{XAU}| > 0.05$.
+    * **Momentum Window :** 1 trading day.
+    * **Rebalance Frequency :** Daily rebalancing.
+    * **Silver Confidence Threshold:** 5%. XAG is only selected if $|Mom_{XAG} - Mom_{XAU}| > 0.05$.
     * **Signal Logic:**
         * **XAU:** Long if $Mom_{XAU} > Mom_{XAG}$, otherwise Short.
         * **XAG:** Only takes a position if the momentum difference exceeds the 5% threshold; otherwise remains flat.
@@ -235,7 +234,6 @@ styled_table
 
 * **Key Observation:** There is a distinct regime shift in performance between 2023 and the later years.
 * **Performance:** While 2023 struggled with low Sharpe Ratios (below 0.5), the strategy adapted significantly in 2024 and 2025, consistently achieving Net Sharpe Ratios above 2.0.
-* **Total Impact:** The strategy generated significant profits in the later sample, with 2024 Q4 alone contributing over 20,000 in Net PnL.
 
 ## Equity line for **group 2** -- 2023Q1
 
@@ -246,9 +244,9 @@ from IPython.display import Image
 Image(filename="data2_2023_Q1(XAUandXAG).png")
 ```
 
-* **Observation:** A noisy start to the backtest period.
-* **Behavior:** The equity curve is erratic, indicating the market lacked a sustained direction for our signals to exploit.
-* **Result:** High transaction costs ate into gross profits, resulting in a Net SR of only 0.27. This confirms why additional filtering (like the cooldown periods) is necessary during undefined trends.
+
+* **Behavior:** The equity curve is volatile, indicating the market lacked a sustained direction for our signals to exploit.
+* **Result:** High transaction costs ate into gross profits, resulting in a Net SR of only 0.27.
 
 ## Equity line for **group 2** -- 2023Q3
 
@@ -259,9 +257,8 @@ from IPython.display import Image
 Image(filename="data2_2023_Q3(XAUandXAG).png")
 ```
 
-* **Challenge:** This was the most difficult quarter for the strategy (The "Drawdown Quarter").
-* **Analysis:** After early gains in July, the market shifted to a choppy, adverse regime in August and September.
-* **Result:** The strategy suffered from "whipsaw" price action, erasing early profits and ending slightly negative. This highlights the need for the volatility filters we implemented later.
+* **Challenge:** This was the most difficult quarter for the strategy.
+* **Result:** The strategy suffered from sharp price reversals, erasing early profits and ending slightly negative.
 
 ## Equity line for **group 2** -- 2023Q4
 
@@ -273,7 +270,7 @@ Image(filename="data2_2023_Q4(XAUandXAG).png")
 ```
 
 * **Market Context:** A largely dormant quarter with very low volatility for the first two months.
-* **Behavior:** The strategy remained flat (neutral) for the majority of the period, adhering to strict entry conditions.
+* **Behavior:** The strategy remained flat for the majority of the period, adhering to strict entry conditions.
 * **Outcome:** A sudden volatility breakout in late December triggered a trade. While it captured a sharp spike, the subsequent reversal caused a drawdown, ending with a modest profit.
 
 ## Equity line for **group 2** -- 2024Q2
@@ -285,7 +282,6 @@ from IPython.display import Image
 Image(filename="data2_2024_Q2(XAUandXAG).png")
 ```
 
-* **Market Context:** A strong trending environment favorable to the strategy.
 * **Behavior:** We see consistent capital growth. Although there was a drawdown period in mid-May, the strategy recovered quickly.
 * **Outcome:** This was one of the most robust quarters, generating nearly 18,000 in Net PnL with a solid Calmar Ratio of 4.40.
 
@@ -298,8 +294,7 @@ from IPython.display import Image
 Image(filename="data2_2024_Q4(XAUandXAG).png")
 ```
 
-* **Highlight:** This is the best-performing quarter in the dataset (Net SR 2.05, Highest Stat 4.72).
-* **Behavior:** The equity curve shows a steady, consistent upward trend ("staircase" pattern).
+* **Behavior:** The equity curve shows a steady, consistent upward trend.
 * **Resilience:** A sharp drawdown occurred in mid-November, but the strategy's risk management logic allowed for an immediate V-shaped recovery to new highs.
 
 ## Equity line for **group 2** -- 2025Q1
@@ -312,8 +307,8 @@ Image(filename="data2_2025_Q1(XAUandXAG).png")
 ```
 
 * **Market Context:** Similar to 2023 Q4, this period lacked clear signals for the first 2.5 months.
-* **Behavior:** The strategy successfully avoided false signals during the quiet period (preserving capital).
-* **Outcome:** A massive trend emerged in the final week of March. The strategy captured this move perfectly, resulting in a vertical equity spike and a high Net SR of 2.25 despite the low trade count.
+* **Behavior:** The strategy successfully avoided false signals during the quiet period.
+* **Outcome:** A massive trend emerged in the final week of March. The strategy captured this move perfectly, resulting in a vertical equity spike and a high Net SR of 2.25.
 
 ## Equity line for **group 2** -- 2025Q2
 
@@ -325,9 +320,15 @@ Image(filename="data2_2025_Q2(XAUandXAG).png")
 ```
 
 * **Market Context:** A highly volatile period with large price swings.
-* **Behavior:** The strategy faced significant turbulence in April and May, resulting in deep drawdowns.
-* **Recovery:** However, the logic held together; the strategy capitalized on the June trends to recover all losses and finish the quarter near equity highs (Net PnL ~19,000).
+* **Behavior:** The strategy faced high volatility in April and May, resulting in deep drawdowns.
+* **Recovery:** However, we caught the trend in June, wiping out earlier losses and finishing the quarter near the highs..
 
 ## Summary and conclusions
 
-Here you should include a summary of obtained results and some general conclusions.
+### Strategy Performance
+
+* **Group 1 (SP vs. NQ):** Confirmed that mean-reversion works in highly correlated regimes. However, performance was unstable and strongly affected by **transaction costs** and **structural breaks**, making the strategy fragile outside favorable conditions.
+* **Group 2 (XAU vs. XAG):** Showed greater **robustness**. After weak results in low-volatility periods, it performed consistently well when clear trends emerged, supported by an effective confidence filter for Silver.
+
+### Final Takeaway
+Overall, the results highlight that high-frequency strategies are cost- and regime-sensitive, while lower-frequency momentum approaches tend to be more stable. **Careful alignment between strategy design, market regime, and trading frequency is essential for sustainable performance.**
