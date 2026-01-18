@@ -320,7 +320,7 @@ Image(filename="data2_2025_Q1(XAUandXAG).png")
 
 * **Market Context:** Similar to 2023 Q4, this period lacked clear signals for the first 2.5 months.
 * **Behavior:** The strategy successfully avoided false signals during the quiet period (preserving capital).
-* **Outcome:** A massive trend emerged in the final week of March. The strategy captured this move perfectly, resulting in a vertical equity spike and a high Net SR of 2.25 despite the low trade count.
+* **Outcome:** A massive trend semerged in the final week of March. The strategy captured this move perfectly, resulting in a vertical equity spike and a high Net SR of 2.25 despite the low trade count.
 
 ## Equity line for **group 2** (XAU vs. XAG) -- 2025Q2
 ```{python}
