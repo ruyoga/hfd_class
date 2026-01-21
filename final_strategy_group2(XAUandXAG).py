@@ -14,7 +14,6 @@ quarters = ['2023_Q1', '2023_Q3', '2023_Q4',
             '2024_Q2', '2024_Q4',
             '2025_Q1', '2025_Q2']
 
-# Strategy Parameters (From Original Code)
 MOMENTUM_WINDOW = 276      # approx 1 day
 REBALANCE_FREQ = 276       # approx 1 day
 XAG_THRESHOLD = 0.05
@@ -67,7 +66,7 @@ for quarter in quarters:
     mom_xau = np.log(data2["XAU"] / data2["XAU"].shift(MOMENTUM_WINDOW)).values
     mom_xag = np.log(data2["XAG"] / data2["XAG"].shift(MOMENTUM_WINDOW)).values
 
-    # Time filters for "Flat Zone" (Original Logic)
+    # Time filters for "Flat Zone"
     times = data2.index.time
     t_exit = pd.to_datetime("16:50").time()
     t_resume = pd.to_datetime("18:10").time()
@@ -82,7 +81,7 @@ for quarter in quarters:
     curr_pos_xau = 0
     curr_pos_xag = 0
 
-    # --- MAIN LOOP (Identical to Original) ---
+    # --- MAIN LOOP---
     for i in range(n):
         # 1. Mandatory Flat Rule (Priority #1)
         if is_flat_zone[i]:
@@ -154,7 +153,7 @@ for quarter in quarters:
     cost_total = (ntrans_xau * SPECS['XAU']['cost']) + (ntrans_xag * SPECS['XAG']['cost'])
     pnl_net_total = pnl_gross_total - cost_total
     
-    # Pct approximation (for Calmar)
+    # Pct approximation
     combined_price = data2["XAU"].shift(1) * SPECS['XAU']['point_val'] + \
                      data2["XAG"].shift(1) * SPECS['XAG']['point_val']
     
@@ -235,5 +234,4 @@ for quarter in quarters:
     del summary
 
 # save the summary for all quarters to a csv file
-# UPDATED: Added (XAUandXAG) to CSV filename
 summary_data2_all_quarters.to_csv('summary_data2_all_quarters(XAUandXAG).csv', index=False)
