@@ -1,7 +1,7 @@
 ---
 title: "Quantitative strategies on High Frequency Data"
 subtitle: "submission of research project -- SAMPLE PRESENTATION"
-author: "Team members: Author nr 1 and Author nr 2"
+author: "Team members: Gregorius Ruyoga and Shintaro Tahara"
 date: 01/20/2026
 date-format: "MMM D, YYYY"
 format: 
@@ -16,7 +16,7 @@ format:
 ### Strategy: Volatility-Adaptive Pair Trading (SP vs. NQ)
 This strategy utilizes a Statistical Arbitrage approach, trading the log-price spread between SP and NQ futures. It incorporates dynamic hedge ratios, volatility-adjusted entry signals, and microstructure filters (cooldown) to account for high-frequency market noise.
 
-### 1. Parameters Considered (**WHAT**)
+### 1. Parameters Considered
 To ensure robustness across different in-sample quarters and maximize the required Summary Statistic, we explored several dimensions:
 
 * **Hedge Ratio Dynamics :** We tested both fixed beta and **Dynamic Beta (1.5 day)**. The rolling covariance/variance ratio was chosen to capture the evolving structural relationship between the two indices.
@@ -24,7 +24,7 @@ To ensure robustness across different in-sample quarters and maximize the requir
 * **Adaptive Sensitivity (0.5):** This parameter dynamically adjusts entry criteria based on market conditions. It calculates the ratio of **current volatility** to its historical baseline. When volatility spikes, the 0.5 sensitivity factor widens the entry bands, effectively raising the bar to prevent false signals during noisy, high-volatility periods.
 * **Risk Controls:** We enforce a **30-minute Cooldown** to prevent rapid re-entry after an exit. Furthermore, a **Strict Stop-Loss (5.0 Z)** serves as a "hard exit" mechanism, immediately cutting positions if the price spread deviates extremely (beyond 5 standard deviations), protecting capital from fundamental breakdowns in the correlation (regime shifts).
 
-### 2. Search Method (**HOW**)
+### 2. Search Method
 We followed a systematic process to select the "Best Strategy" for the final presentation:
 
 * **Manual Parameter Tuning:** We determined the optimal window sizes and threshold multipliers through **iterative manual adjustments**.
@@ -37,14 +37,14 @@ We followed a systematic process to select the "Best Strategy" for the final pre
 ### Strategy: Daily Relative Momentum (XAU vs. XAG)
 This strategy utilizes a daily-frequency relative momentum approach between Gold (XAU) and Silver (XAG). It rotates exposure to the asset showing stronger short-term price performance while incorporating a specific confidence filter for Silver trades.
 
-### 1. Parameters Considered (**WHAT**)
+### 1. Parameters Considered
 To capture the most effective daily price trends, we explored the following parameters:
 
 * **Momentum Window :** We tested various windows from intra-day to multi-week. We selected **1 trading day** to capture immediate price shifts in the market.
 * **Rebalance Frequency :** We matched the rebalance cycle to the momentum window of **1 trading day**. This ensures the portfolio is updated daily to reflect the most recent relative strength between assets.
 * **Silver Confidence Threshold:** Due to Silver's inherent volatility, we applied a **5% threshold**. Silver is only traded if its momentum significantly deviates from Gold's, effectively filtering out noisy signals.
 
-### 2. Search Method (**HOW**)
+### 2. Search Method
 Our optimization process for the "Best Strategy" involved:
 
 * **Iterative Testing:** We performed iterative testing across multiple time horizons, transitioning from medium-term (15-day) to short-term (1-day) windows to maximize the required Summary Statistic.
