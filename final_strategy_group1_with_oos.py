@@ -1,9 +1,13 @@
-# final_strategy_group1_clean.py
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import quantstats as qs
 import warnings
+
+# --- GUI表示を防ぐ設定 ---
+import matplotlib
+
+matplotlib.use('Agg')
 
 warnings.filterwarnings('ignore')
 
@@ -12,33 +16,23 @@ warnings.filterwarnings('ignore')
 # 1. Configuration
 # ==========================================
 class Config:
-    # 講義ルールに基づく厳密な期間分割
-    IS_QUARTERS = [
-        '2023_Q1', '2023_Q3', '2023_Q4',
-        '2024_Q2', '2024_Q4',
-        '2025_Q1', '2025_Q2'
+    # IS + OOS (Sorted)
+    QUARTERS = [
+        '2023_Q1', '2023_Q2', '2023_Q3', '2023_Q4',
+        '2024_Q1', '2024_Q2', '2024_Q3', '2024_Q4',
+        '2025_Q1', '2025_Q2', '2025_Q3', '2025_Q4'
     ]
 
-    OOS_QUARTERS = [
-        '2023_Q2',
-        '2024_Q1', '2024_Q3',
-        '2025_Q3', '2025_Q4'
-    ]
+    OOS_QUARTERS = ['2023_Q2', '2024_Q1', '2024_Q3', '2025_Q3', '2025_Q4']
 
-    # 処理順序（時系列順に並べ替えて処理するためのリスト）
-    ALL_QUARTERS = sorted(IS_QUARTERS + OOS_QUARTERS)
-
-    # Contract Specifications
     POINT_VAL_SP = 50.0
     POINT_VAL_NQ = 20.0
     COST_SP = 12.0
     COST_NQ = 12.0
 
-    # Trading Hours
     TRADE_START_TIME = pd.to_datetime("10:00").time()
     EXIT_TIME = pd.to_datetime("15:40").time()
 
-    # Strategy Parameters
     WINDOW = 45
     BETA_WINDOW = 600
     VOL_WINDOW = 180
@@ -63,28 +57,25 @@ def mySR(x, scale):
 summary_list = []
 all_daily_dfs = []
 
-print("Starting Group 1 Analysis...")
+print("Starting Group 1 Strategy Backtest...")
 
-for quarter in Config.ALL_QUARTERS:
-    print(f'Processing {quarter}...', end=' ')
-
+for quarter in Config.QUARTERS:
+    print(f'Processing quarter: {quarter}')
     try:
         data1 = pd.read_parquet(f'data/data1_{quarter}.parquet')
-        print("Loaded.")
     except FileNotFoundError:
-        print(f"Skipping (File not found).")
+        print(f"File not found: data/data1_{quarter}.parquet. Skipping.")
         continue
 
     data1.set_index('datetime', inplace=True)
 
-    # --- Mandatory Data Cleaning ---
+    # Cleaning
     data1.loc[data1.between_time("9:31", "9:40").index] = np.nan
     data1.loc[data1.between_time("15:51", "16:00").index] = np.nan
 
-    # --- Indicators Calculation ---
+    # Indicators
     ln_sp = np.log(data1['SP'])
     ln_nq = np.log(data1['NQ'])
-
     nq_ret = ln_nq.diff()
     current_vol = nq_ret.rolling(window=Config.VOL_WINDOW).std()
     baseline_vol = nq_ret.rolling(window=Config.VOL_BASELINE_WINDOW).std()
@@ -98,7 +89,7 @@ for quarter in Config.ALL_QUARTERS:
     z_score = (spread - spread.rolling(window=Config.WINDOW).mean()) / spread.rolling(
         window=Config.WINDOW).std().replace(0, np.nan)
 
-    # --- Iterative Backtest Loop ---
+    # Loop
     times = data1.index.time
     datetimes = data1.index
     z_vals = z_score.values
@@ -144,97 +135,95 @@ for quarter in Config.ALL_QUARTERS:
                 last_exit_time = datetimes[i]
         pos_strategy[i] = curr_pos
 
-    # --- PnL Calculation ---
+    # PnL
     pos_held = pd.Series(pos_strategy, index=data1.index).shift(1).fillna(0)
     pos_held[times >= Config.EXIT_TIME] = 0
 
     pnl_nq = pos_held * data1["NQ"].diff() * Config.POINT_VAL_NQ
     pnl_sp = (pos_held * -1) * data1["SP"].diff() * Config.POINT_VAL_SP
     pnl_gross = (pnl_nq + pnl_sp).fillna(0)
-
     ntrans = np.abs(pos_held.diff().fillna(0))
     pnl_net = pnl_gross - (ntrans * (Config.COST_NQ + Config.COST_SP))
 
-    # Aggregation for Table
+    # Aggregation
     pnl_gross_d = pnl_gross.resample('D').sum()
     pnl_net_d = pnl_net.resample('D').sum()
     ntrans_d = ntrans.resample('D').sum()
-    pnl_net_pct_d = pnl_net_d / data1["NQ"].resample('D').first()
 
+    # --- Calculate Percent Returns for CR ---
+    nq_open_price = data1["NQ"].resample('D').first()
+    pnl_net_pct_d = pnl_net_d / nq_open_price
+    pnl_gross_pct_d = pnl_gross_d / nq_open_price  # Added for Gross CR
+
+    # Metrics
     net_sr = mySR(pnl_net_d, scale=Config.ANNUALIZATION)
+    gross_sr = mySR(pnl_gross_d, scale=Config.ANNUALIZATION)
+
     try:
         net_cr = qs.stats.calmar(pnl_net_pct_d.dropna())
     except:
         net_cr = 0
 
+    try:
+        gross_cr = qs.stats.calmar(pnl_gross_pct_d.dropna())  # Added
+    except:
+        gross_cr = 0
+
     stat_val = (net_sr - 0.5) * np.maximum(0, np.log(np.abs(pnl_net_d.sum() / 1000)))
 
-    # Collect Summary Data (指定形式の順序)
     row = {
         'quarter': quarter,
-        'gross_SR': mySR(pnl_gross_d, scale=Config.ANNUALIZATION),
+        'gross_SR': gross_sr,
         'net_SR': net_sr,
         'gross_PnL': pnl_gross_d.sum(),
         'net_PnL': pnl_net_d.sum(),
+        'gross_CR': gross_cr,  # Added
         'net_CR': net_cr,
         'av_daily_ntrans': ntrans_d.mean(),
         'stat': stat_val
     }
     summary_list.append(row)
 
-    # Collect Daily Data for Plotting
-    daily_df = pd.DataFrame({
-        'Net_PnL': pnl_net_d,
-        'Gross_PnL': pnl_gross_d,
-        'Quarter': quarter
-    })
-    # Remove days with 0 PnL (weekends/holidays) to make chart continuous
+    # Plotting
+    daily_df = pd.DataFrame({'Net_PnL': pnl_net_d, 'Gross_PnL': pnl_gross_d, 'Quarter': quarter})
     daily_df = daily_df[daily_df['Gross_PnL'] != 0]
     all_daily_dfs.append(daily_df)
 
-# ==========================================
-# 3. Output Generation
-# ==========================================
+    plt.figure(figsize=(12, 6))
+    plt.plot(pnl_gross_d.index, pnl_gross_d.cumsum(), label='Gross PnL', color='blue')
+    plt.plot(pnl_net_d.index, pnl_net_d.cumsum(), label='Net PnL', color='red')
+    plt.title(f'Cumulative P&L ({quarter})')
+    plt.legend()
+    plt.savefig(f"data1_{quarter}.png", dpi=300, bbox_inches="tight")
+    plt.close()
 
-# 1. Summary Table CSV (Requested Format)
+# --- Final Save (9 Columns) ---
 summary_df = pd.DataFrame(summary_list)
-# カラム順序を固定
-cols = ['quarter', 'gross_SR', 'net_SR', 'gross_PnL', 'net_PnL', 'net_CR', 'av_daily_ntrans', 'stat']
+# Included 'gross_CR'
+cols = ['quarter', 'gross_SR', 'net_SR', 'gross_PnL', 'net_PnL', 'gross_CR', 'net_CR', 'av_daily_ntrans', 'stat']
 summary_df = summary_df[cols]
-# CSV出力（ヘッダーなし、インデックスなし）
 summary_df.to_csv('summary_data1_all_quarters.csv', index=False, header=False)
-print("\nGenerated: summary_data1_all_quarters.csv")
-print(summary_df)
 
+print("\nGenerated: summary_data1_all_quarters.csv")
 # 2. Cumulative Equity Curve Plot
 if all_daily_dfs:
     full_df = pd.concat(all_daily_dfs).sort_index()
     full_df['Cumulative_Net_PnL'] = full_df['Net_PnL'].cumsum()
     full_df['Cumulative_Gross_PnL'] = full_df['Gross_PnL'].cumsum()
-
     plt.figure(figsize=(15, 8))
-
-    # Main Lines
     plt.plot(full_df.index, full_df['Cumulative_Net_PnL'], label='Net PnL', color='darkblue', linewidth=1.5)
     plt.plot(full_df.index, full_df['Cumulative_Gross_PnL'], label='Gross PnL', color='lightblue', linestyle='--',
              linewidth=1, alpha=0.7)
 
-    # OOS Highlighting
     added_label = False
-    y_min, y_max = plt.ylim()
-
     for quarter in Config.OOS_QUARTERS:
         q_data = full_df[full_df['Quarter'] == quarter]
         if not q_data.empty:
             start_date = q_data.index[0]
             end_date = q_data.index[-1]
-
-            plt.axvspan(start_date, end_date, color='red', alpha=0.1,
-                        label='Out-of-Sample' if not added_label else "")
-
-            # Label on top
-            plt.text(start_date, full_df['Cumulative_Net_PnL'].max(), quarter,
-                     rotation=90, verticalalignment='top', fontsize=8, color='red', alpha=0.7)
+            plt.axvspan(start_date, end_date, color='red', alpha=0.1, label='Out-of-Sample' if not added_label else "")
+            plt.text(start_date, full_df['Cumulative_Net_PnL'].max(), quarter, rotation=90, verticalalignment='top',
+                     fontsize=8, color='red', alpha=0.7)
             added_label = True
 
     plt.title('Group 1: Cumulative Equity Curve (IS vs OOS)', fontsize=14)
@@ -242,7 +231,5 @@ if all_daily_dfs:
     plt.legend(loc='upper left')
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
     plt.tight_layout()
-
     plt.savefig('G1_Final_Equity_Curve.png', dpi=300)
-    plt.show()
     print("Generated: G1_Final_Equity_Curve.png")
