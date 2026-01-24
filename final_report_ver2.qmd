@@ -105,7 +105,6 @@ A center level was identified as the approximate midpoint of the trading range o
 
 - **Neutral Zone Width**: ±0.01, ±0.015, ±0.02 around center
 
-- **Data Frequency**: Daily close, 4-hour bars, 1-hour bars
 - **Position Holding Period**: Until profit target or stop-loss vs time-based exit (3 days, 5 days, 7 days maximum hold)
 
 *Parameter Adjustment Process*:
