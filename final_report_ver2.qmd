@@ -1,0 +1,360 @@
+---
+title: "Quantitative Strategies on High Frequency Data"
+subtitle: "Final Research Project Report"
+author: "Team members: Shintaro Tahara - 477063, Gregorius Ruyoga - 477174"
+date: 01/25/2026
+date-format: "MMM D, YYYY"
+format: docx
+---
+
+## Approaches Undertaken
+
+### Group 1: S&P 500 (SP) and Nasdaq 100 (NQ) Futures
+
+**Core Strategy**: Statistical arbitrage using pairs trading with dynamic beta hedging and adaptive z-score thresholds.
+
+**Methods Explored**:
+
+1. **Beta Calculation Windows**: Tested rolling windows of 300, 450, 600, and 900 minutes
+   - Selected 600 minutes for optimal balance between responsiveness and stability
+
+2. **Spread Calculation Windows**: Evaluated 30, 45, 60, and 90 minutes for z-score computation
+   - Chose 45 minutes to capture short-term mean reversion opportunities
+
+3. **Entry Thresholds**: Experimented with fixed z-scores (2.0, 2.5, 3.0, 3.5) and adaptive mechanisms
+   - Implemented adaptive entry with base threshold of 3.0 and volatility-adjusted sensitivity of 0.5
+
+   - Maximum entry threshold capped at 3.5 to avoid entering during extreme market conditions
+
+4. **Volatility Adjustment**: Tested short-term (120, 180, 240 minutes) vs baseline (600 minutes) volatility windows
+   - Selected 180 minutes short-term and 600 minutes baseline for adaptive threshold adjustment
+
+5. **Exit Rules**: Compared mean reversion exits (z=0), partial exits (z=±1.0), and stop-loss mechanisms
+   - Final selection: z=0 for profit-taking, z=±5.0 for stop-loss protection
+
+6. **Trading Hours and Cooldown**: Implemented 10:00-15:40 trading window with 30-minute cooldown after exit
+   - This prevents overtrading and allows market conditions to stabilize
+
+**Parameter Search Process**: Grid search over parameter combinations on in-sample quarters, optimizing for net Sharpe ratio weighted by absolute PnL (stat metric). Selected configuration that maximized consistency across multiple in-sample periods.
+
+---
+
+#### Alternative Strategies Tested - Group 1
+
+**Strategy 1: Nasdaq 100 Futures Volatility Bollinger Band Strategy**
+
+*Overview*:
+Volatility-adjusted Bollinger Band mean reversion strategy applied to NQ futures. The approach uses dynamic bands that expand and contract based on realized volatility, with entry signals generated when price touches the outer bands and exit signals triggered upon reversion to the middle band. Position sizing was kept constant at one contract to isolate signal quality from leverage effects.
+
+*Parameters Tested*:
+
+- **Lookback Window**: 60, 90, 120, 180, 240 minutes (tested to balance signal frequency with noise reduction)
+
+- **Band Width (Standard Deviations)**: 1.5, 2.0, 2.5, 3.0 (wider bands reduce false signals but miss opportunities)
+
+- **Volatility Calculation Method**: Simple standard deviation vs exponentially weighted moving average (20, 40, 60 minute half-lives)
+
+- **Exit Threshold**: Middle band (MA) vs partial reversion (0.5 SD, 1.0 SD from MA)
+
+- **Cooldown Period**: 15, 30, 45, 60 minutes post-exit to prevent immediate re-entry
+
+*Parameter Adjustment Process*:
+Started with standard 60-minute lookback and 2 SD bands, then iteratively tested wider bands (2.5, 3.0 SD) and longer windows (120, 180 minutes) on 2023Q1 and Q3. Selected 120-minute lookback with 2.5 SD bands and 30-minute cooldown based on stable stat scores above 0.5 across both quarters.
+
+*Results and Decision*:
+Gross Sharpe ratios scored not bad, but net performance suffered from excessive transactions that eroded returns to net SR. Silver's trending behavior during some periods conflicted fundamentally with mean reversion logic, making this approach unsuitable despite parameter optimization.
+
+---
+
+### Group 2: Gold (XAU) and Silver (XAG) Futures
+
+**Core Strategy**: Dual-asset momentum strategy with relative strength filtering.
+
+**Methods Explored**:
+
+1. **Momentum Windows**: Tested lookback periods of 138, 207, 276, and 345 minutes (0.5 to 1.25 trading days)
+   - Selected 276 minutes (approximately 1 trading day) for capturing persistent trends
+
+2. **Rebalancing Frequency**: Evaluated continuous (every bar), 138, 276, and 552 minutes
+   - Chose 276 minutes to reduce transaction costs while maintaining trend capture
+
+3. **XAG Entry Thresholds**: Tested momentum differentials of 0.0, 0.03, 0.05, and 0.08
+   - Selected 0.05 to filter out weak silver signals and reduce whipsaws
+
+**Parameter Search Process**: Sequential optimization starting with momentum window, then rebalancing frequency, finally XAG threshold. Validated on multiple in-sample quarters to ensure robustness. Prioritized strategies with net SR > 1.0 and reasonable transaction frequency.
+
+---
+
+#### Alternative Strategies Tested - Group 2
+
+**Strategy 1: AUD/CAD Range-Bound Mean Reversion Strategy**
+
+*Overview*:
+This strategy trades the AUD/CAD exchange rate within a historically stable range.
+A center level was identified as the approximate midpoint of the trading range over the sample period. Long positions are taken when the exchange rate moves well below this level, while short positions are taken when it moves well above it. When prices remain close to the center, the strategy stays flat to avoid trading in low-conviction, range-bound conditions.
+
+*Parameters Tested*:
+
+- **Center Reference Level**: 0.9, 0.93, 0.95, 0.97
+
+- **Entry Distance from Center**: 0.02, 0.03, 0.04, 0.05
+
+- **Profit-Taking Threshold**: Return to center, partial reversion (0.01, 0.015 from center)
+
+- **Stop-Loss Boundaries**: Range breakdown levels at 0.85 (lower) and 1.05 (upper)
+
+- **Neutral Zone Width**: ±0.01, ±0.015, ±0.02 around center
+
+- **Data Frequency**: Daily close, 4-hour bars, 1-hour bars
+- **Position Holding Period**: Until profit target or stop-loss vs time-based exit (3 days, 5 days, 7 days maximum hold)
+
+*Parameter Adjustment Process*:
+Iteratively tested entry distances and profit targets using daily closing prices.
+
+*Results*:
+Achieved moderate gross SR  during stable periods but net SR dropped after costs.
+
+---
+
+## Finally Selected Strategy for Group 1
+
+**Strategy Type**: Pairs trading with dynamic beta hedging
+
+**Core Logic**:
+
+- Long/short positions in NQ based on spread deviation from rolling mean
+
+- Opposite positions in SP to hedge beta exposure
+
+- Adaptive entry thresholds respond to changing volatility regime
+
+**Final Parameters**:
+
+- Spread calculation window: 45 minutes
+
+- Beta estimation window: 600 minutes
+
+- Short-term volatility window: 180 minutes
+
+- Baseline volatility window: 600 minutes
+
+- Base z-score entry threshold: 3.0
+
+- Adaptive sensitivity: 0.5
+
+- Maximum entry threshold: 3.5
+
+- Exit threshold: z = 0.0 (mean reversion)
+
+- Stop-loss: z = ±5.0
+
+- Cooldown period: 30 minutes after exit
+
+**Entry Logic**:
+
+- Enter short NQ / long SP when z > (3.0 + max(0, (vol_ratio - 1.0) × 0.5)), capped at 3.5
+
+- Enter long NQ / short SP when z < -(3.0 + max(0, (vol_ratio - 1.0) × 0.5)), capped at -3.5
+
+- No entry during cooldown period
+
+**Exit Logic**:
+
+- Close position when z crosses 0 or hits stop-loss at ±5.0
+
+- Mandatory exit at 15:40 EST
+
+**Rationale for Selection**:
+We chose the SP/NQ pairs approach over the NQ Bollinger Band strategy for three reasons. The SP–NQ spread exhibits reliable mean reversion, while standalone NQ often trends and breaks mean-reversion signals. Adaptive entry thresholds and a cooldown cut overtrading and improve transaction-cost efficiency. The pairs structure also provides natural beta hedging and reduces directional exposure, making it more robust in volatile periods where fixed Bollinger Bands struggle to adapt.
+
+```{python}
+#| echo: false
+#| output: false
+import runpy
+runpy.run_path("final_strategy_group1_with_oos.py")
+```
+
+---
+
+## Quarterly Performance Statistics - Group 1
+```{python}
+#| echo: false
+import pandas as pd
+from IPython.display import display
+
+# Load summary data
+try:
+    # Read CSV without header (contains 9 columns now)
+    summary_data1_full = pd.read_csv("summary_data1_all_quarters.csv", header=None)
+
+    # Update columns to include 'gross_CR' (Total 9 columns)
+    summary_data1_full.columns = ['quarter', 'gross_SR', 'net_SR', 'gross_PnL',
+                             'net_PnL', 'gross_CR', 'net_CR', 'av_daily_ntrans', 'stat']
+
+    # Coerce numeric columns to numbers
+    numeric_cols = ['gross_SR', 'net_SR', 'gross_PnL', 'net_PnL', 'gross_CR', 'net_CR', 'av_daily_ntrans', 'stat']
+    for col in numeric_cols:
+        summary_data1_full[col] = pd.to_numeric(summary_data1_full[col], errors='coerce')
+
+    # Drop rows that might be accidental headers
+    summary_data1_full = summary_data1_full.dropna(subset=['net_SR'])
+
+    # Format the table
+    styled_table1_full = (
+        summary_data1_full.style
+        .format("{:.2f}", subset=numeric_cols)
+        .set_properties(**{"text-align": "right"})
+        .set_table_styles([
+            {"selector": "th", "props": [("font-size", "10px"), ("text-align", "center")]},
+            {"selector": "td", "props": [("font-size", "10px")]}
+        ])
+        .hide(axis="index")
+    )
+    display(styled_table1_full)
+except Exception as e:
+    print(f"Error loading table: {e}")
+```
+
+**Analysis**:
+
+[Analysis to be added]
+
+---
+
+## Cumulative Equity Curve for Group 1 (All Quarters)
+```{python}
+#| echo: false
+#| out-width: 100%
+from IPython.display import Image
+Image(filename="Cumulative_Line_all_g1.png")
+```
+
+**Analysis**:
+
+[Analysis to be added]
+
+---
+
+## Finally Selected Strategy for Group 2
+
+**Strategy Type**: Momentum-based directional trading with relative strength filtering
+
+**Core Logic**:
+- Take long/short positions in XAU based on momentum relative to XAG
+- Add XAG position only when momentum differential exceeds threshold
+- Mandatory flat positions during overnight session (16:50-18:10 EST)
+
+**Final Parameters**:
+- Momentum calculation window: 276 minutes (~1 trading day)
+- Rebalancing frequency: 276 minutes
+- XAG momentum threshold: 0.05
+- Flat zone: 16:50 - 18:10 EST (overnight session)
+
+**Entry Logic**:
+- **XAU position** (rebalanced every 276 minutes):
+
+  - Long XAU if momentum_XAU > momentum_XAG
+
+  - Short XAU if momentum_XAU < momentum_XAG
+
+- **XAG position** (rebalanced every 276 minutes):
+
+  - Long XAG if momentum_XAG > (momentum_XAU + 0.05)
+
+  - Short XAG if momentum_XAG < (momentum_XAU - 0.05)
+
+  - Flat XAG if momentum_XAG - momentum_XAU| ≤ 0.05
+
+**Exit Logic**:
+- Positions maintained until next rebalancing signal
+
+- Mandatory flat during 16:50-18:10 EST
+
+**Rationale for Selection**:
+The momentum approach was chosen for its adaptability and stronger empirical performance versus the AUD/CAD range strategy. It requires no fixed equilibrium, concentrates exposure on the stronger metal via a relative-strength filter, and delivers cleaner signals with fewer trades and lower transaction costs.
+
+```{python}
+#| echo: false
+#| output: false
+import runpy
+runpy.run_path("final_strategy_group2_with_oos.py")
+```
+
+---
+
+## Summary of Results for Group 2
+```{python}
+#| echo: false
+import pandas as pd
+
+# Load summary data
+try:
+    summary_data2 = pd.read_csv("summary_data2_all_quarters(XAUandXAG).csv")
+
+    # If CSV has headers, use them; otherwise assign column names
+    if 'quarter' not in summary_data2.columns:
+        summary_data2.columns = ['quarter', 'gross_SR', 'net_SR', 'gross_PnL',
+                                 'net_PnL', 'gross_CR', 'net_CR', 'av_daily_ntrans', 'stat']
+
+    # Coerce numeric columns to numbers
+    numeric_cols = [col for col in summary_data2.columns if col != 'quarter']
+    for col in numeric_cols:
+        summary_data2[col] = pd.to_numeric(summary_data2[col], errors='coerce')
+
+    # Drop rows that might be problematic
+    summary_data2 = summary_data2.dropna(subset=['net_SR'])
+
+    # Format the table
+    styled_table2 = (
+        summary_data2.style
+        .format("{:.2f}", subset=numeric_cols)
+        .set_properties(**{"text-align": "right"})
+        .set_table_styles([
+            {"selector": "th", "props": [("font-size", "10px"), ("text-align", "center")]},
+            {"selector": "td", "props": [("font-size", "10px")]}
+        ])
+        .hide(axis="index")
+    )
+    display(styled_table2)
+except Exception as e:
+    print(f"Error loading table: {e}")
+```
+
+**Analysis**:
+- To be added
+---
+
+## Cumulative Equity Curve for Group 2 (All Quarters)
+```{python}
+#| echo: false
+#| out-width: 100%
+from IPython.display import Image
+Image(filename="Cumulative_Line_all_g2.png")
+```
+
+**Analysis**:
+
+[Analysis to be added]
+
+---
+
+## Summary and Conclusions
+
+### Overall Performance Assessment
+
+Both strategies demonstrated ~~~
+
+1. **Group 1 (SP/NQ Pairs Trading)**:
+
+   - To be added
+
+2. **Group 2 (XAU/XAG Momentum)**:
+
+   - To be added
+
+
+### Key Learnings
+
+- To be added
+
+---
