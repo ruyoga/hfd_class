@@ -4,7 +4,7 @@ subtitle: "Final Research Project Report"
 author: "Team members: Shintaro Tahara - 477063, Gregorius Ruyoga - 477174"
 date: 01/25/2026
 date-format: "MMM D, YYYY"
-format: docx
+format: pdf
 ---
 
 ## Approaches Undertaken
@@ -228,10 +228,6 @@ from IPython.display import Image
 Image(filename="Cumulative_Line_all_g1.png")
 ```
 
-**Analysis**:
-
-[Analysis to be added]
-
 ---
 
 ## Finally Selected Strategy for Group 2
@@ -319,8 +315,6 @@ except Exception as e:
     print(f"Error loading table: {e}")
 ```
 
-**Analysis**:
-- To be added
 ---
 
 ## Cumulative Equity Curve for Group 2 (All Quarters)
@@ -333,23 +327,72 @@ Image(filename="Cumulative_Line_all_g2.png")
 
 **Analysis**:
 
-[Analysis to be added]
+The SP/NQ pairs trading strategy exhibits three distinct performance phases over the 12-quarter test period:
 
+**Phase 1 - Early Success (2023 Q1-Q2)**: The strategy demonstrated exceptional performance with net Sharpe ratios of 2.20 and 1.63, generating net PnL of $4,530 and $5,431 respectively. Transaction costs were well-managed despite moderate trading frequency (2-3 trades/day), and the strategy effectively captured mean-reversion opportunities during relatively stable market conditions.
+
+**Phase 2 - Extended Deterioration (2023 Q3 - 2024 Q3)**: Six consecutive quarters of underperformance, with most quarters showing negative or near-zero net Sharpe ratios. The worst performance occurred in 2024 Q2 (net SR: -2.21, net PnL: -$4,300). Transaction costs consistently eroded gross profits during this period, indicating reduced signal quality rather than overtrading. The persistent gap between gross and net performance suggests the market regime shifted toward trending behavior that reduced mean-reversion opportunities.
+
+**Phase 3 - Recovery (2024 Q4 - 2025 Q4)**: Progressive improvement culminating in exceptional Q4 2025 performance (net SR: 3.52, net PnL: $3,722). Transaction frequency stabilized around 1.5-1.7 trades/day, improving cost efficiency. The adaptive threshold mechanism appears to have successfully adjusted to the new volatility regime, with the stat metric returning to positive territory.
+
+**Transaction Cost Impact**: Throughout 2024, transaction costs consumed approximately $3,000-4,000 per quarter despite stable trading frequency, emphasizing that signal quality degradation, not overtrading, drove underperformance.
+
+**Out-of-Sample Performance**: Mixed results in OOS periods (shaded in the equity curve), with both strong quarters (2025 Q2, Q4) and weak ones (2024 Q2, Q3), suggesting moderate robustness but some vulnerability to regime changes.
 ---
 
 ## Summary and Conclusions
 
 ### Overall Performance Assessment
 
-Both strategies demonstrated ~~~
 
 1. **Group 1 (SP/NQ Pairs Trading)**:
 
-   - To be added
+   - **Final Cumulative Net PnL**: Approximately $17,000 over 12 quarters
+   - **Risk Profile**: Conservative with controlled drawdowns and no catastrophic losses
+   - **Consistency**: Moderate - experienced an 18-month flat period but recovered without severe capital impairment
+   - **Transaction Cost Sensitivity**: High - performance deteriorated significantly when signal quality declined, with costs consuming $3,000-4,000 per quarter during 2024
+   - **Regime Adaptability**: Limited - struggled during trending market conditions from 2023 Q3 through 2024 Q3, but adaptive thresholds eventually helped recovery
+   - **Deployment Viability**: Suitable for risk-averse applications or as a portfolio diversifier, providing steady but modest returns without exposing capital to severe tail risk
+   - **Key Strength**: Beta hedging and adaptive mechanisms provided defensive characteristics during adverse conditions
+   - **Key Weakness**: Extended periods of underperformance when mean-reversion opportunities diminished
 
 2. **Group 2 (XAU/XAG Momentum)**:
 
-   - To be added
+   - **Final Cumulative Net PnL**: Approximately $3,000 (after catastrophic 2025 Q4 drawdown from $50,000 peak)
+   - **Risk Profile**: Aggressive with extreme volatility and severe tail risk
+   - **Consistency**: Poor - alternated between exceptional gains and devastating losses
+   - **Best Quarter**: 2024 Q4 with $20,875 net profit (net SR: 2.05)
+   - **Worst Quarter**: 2025 Q4 with -$47,360 net loss (net SR: -4.56), representing a 94% drawdown from peak equity
+   - **Regime Dependency**: Extreme - thrived during persistent trends but catastrophically failed during reversals
+   - **Deployment Viability**: Not suitable for deployment without substantial enhancements to risk management, particularly momentum reversal protection and dynamic position sizing
+   - **Key Strength**: Captured large directional moves efficiently during favorable regimes
+   - **Key Weakness**: Complete lack of protection against sudden momentum reversals led to unacceptable drawdowns
+
+**Comparative Assessment**: Group 1's pairs trading approach proved more robust overall, delivering steady positive returns with controlled risk despite a prolonged underperformance period. Group 2's momentum strategy, while capable of generating superior returns during favorable conditions, exhibited unacceptable tail risk that ultimately destroyed most accumulated gains. The contrast highlights the fundamental tradeoff between aggressive return-seeking strategies and defensive capital preservation approaches.
+
+### Key Learnings
+
+1. **Transaction Cost Impact on Signal Quality**: Group 1's experience demonstrates how transaction costs become particularly destructive when signal quality degrades. During 2024, stable trading frequency (~1.7 trades/day) still resulted in significant cost drag because the underlying mean-reversion signals weakened. This emphasizes that cost management requires not just limiting trade frequency, but maintaining high-quality entry signals. The adaptive entry threshold mechanism helped by raising the bar for trade initiation during elevated volatility, but proved insufficient during the full regime shift.
+
+2. **Regime Detection is Critical**: Both strategies suffered from lack of explicit regime detection mechanisms. Group 1's mean-reversion approach failed during trending markets (2023 Q3 - 2024 Q3), while Group 2's momentum approach catastrophically failed during reversals (2024 Q3, 2025 Q4). A meta-strategy incorporating regime classification (trending vs. mean-reverting vs. choppy) could dynamically allocate between strategies or adjust position sizing based on current market conditions. Technical indicators like ADX, volatility metrics, or machine learning classifiers trained on historical regime patterns could provide early warning signals.
+
+3. **Risk Management Cannot Be an Afterthought**: Group 2's devastating 2025 Q4 collapse (losing $44,000 or 94% from peak) illustrates the danger of momentum strategies without adequate reversal protection. The strategy's time-based rebalancing continued holding directional positions as trends reversed, with no mechanism to detect or respond to momentum breakdown. Potential improvements include: (a) momentum strength filters that reduce exposure when momentum weakens, (b) trailing stops based on recent peak/trough levels, (c) volatility-adjusted position sizing that scales down during high-volatility regimes, and (d) maximum drawdown limits that force position flattening after losses exceed thresholds.
+
+4. **Overfitting Manifestations in Out-of-Sample Performance**: Both strategies showed degraded OOS performance, but Group 2's catastrophic Q4 2025 failure is particularly instructive. The parameters optimized on in-sample quarters (276-minute momentum window, 0.05 XAG threshold) likely captured characteristics of specific trend episodes that did not generalize. More conservative parameter selection with larger safety margins, validation across multiple market regimes, and walk-forward optimization could improve robustness. Additionally, the stat metric (net SR weighted by absolute PnL) may have overemphasized performance during strong trending periods, leading to parameter sets that maximize gains in favorable conditions while underestimating tail risk.
+
+5. **Adaptive Mechanisms Provide Value**: Group 1's volatility-adjusted entry thresholds demonstrated value during the 2024 Q4 - 2025 recovery phase. When volatility increased, the strategy automatically raised entry requirements, reducing exposure during uncertain conditions. This adaptive behavior helped the strategy eventually recover after the extended drawdown. Group 2 would benefit from similar adaptive features, such as: (a) momentum strength thresholds that adjust based on recent volatility, (b) position sizing that scales with confidence measures, and (c) rebalancing frequency that adapts to market regime (more frequent in choppy conditions, less frequent in strong trends).
+
+6. **Pairs Trading Provides Natural Hedging**: Group 1's structure of opposing positions in correlated assets (long NQ / short SP or vice versa) provided inherent protection against broad market moves. This beta-neutral design reduced directional exposure and contributed to controlled drawdowns. Even during the worst quarter (2024 Q2), the loss remained moderate (-$4,300) compared to Group 2's catastrophic failures. This emphasizes the value of hedged structures in systematic trading strategies.
+
+7. **Strategy Diversification Benefits**: The complementary nature of mean-reversion (Group 1) and momentum (Group 2) approaches suggests potential benefits from portfolio allocation between both strategies. A combined approach with dynamic weighting based on recent performance, regime indicators, or volatility metrics could smooth returns and reduce drawdown severity. For example, increasing allocation to pairs trading during high-volatility choppy regimes, while favoring momentum during stable trending regimes, could improve risk-adjusted returns.
+
+8. **The Importance of Explicit Stop-Loss Rules**: Group 1's z = ±5.0 stop-loss proved more effective at limiting losses than Group 2's pure time-based rebalancing. Having explicit exit rules based on adverse price movements (rather than waiting for the next rebalancing signal) provides critical protection when initial trade thesis breaks down. Group 2 would benefit from incorporating similar protective stops based on momentum reversal signals or drawdown thresholds.
+
+9. **Cost-Benefit Tradeoffs in Parameter Optimization**: Group 1's extended parameter search (testing 4 beta windows × 4 spread windows × 5 entry thresholds × 3 volatility windows = 240+ combinations) likely contributed to better generalization than Group 2's sequential optimization. However, both strategies showed overfitting signs in OOS periods. This suggests diminishing returns from parameter optimization beyond a certain point, and the importance of reserving substantial data for true OOS validation rather than using all available data for parameter tuning.
+
+10. **Transaction Cost Modeling Accuracy Matters**: Both strategies' net performance differed substantially from gross performance, with typical cost drag of $2,000-4,000 per quarter. Accurate modeling of slippage, bid-ask spreads, and market impact during strategy development is crucial for realistic performance assessment. Strategies that appear profitable gross-of-costs may be unviable net-of-costs, particularly for higher-frequency approaches or during low-volatility regimes when edge is minimal.
+
+---
 
 
 ### Key Learnings
