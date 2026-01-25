@@ -214,10 +214,6 @@ except Exception as e:
     print(f"Error loading table: {e}")
 ```
 
-**Analysis**:
-
-[Analysis to be added]
-
 ---
 
 ## Cumulative Equity Curve for Group 1 (All Quarters)
