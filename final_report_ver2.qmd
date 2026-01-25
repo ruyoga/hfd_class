@@ -393,10 +393,3 @@ The SP/NQ pairs trading strategy exhibits three distinct performance phases over
 10. **Transaction Cost Modeling Accuracy Matters**: Both strategies' net performance differed substantially from gross performance, with typical cost drag of $2,000-4,000 per quarter. Accurate modeling of slippage, bid-ask spreads, and market impact during strategy development is crucial for realistic performance assessment. Strategies that appear profitable gross-of-costs may be unviable net-of-costs, particularly for higher-frequency approaches or during low-volatility regimes when edge is minimal.
 
 ---
-
-
-### Key Learnings
-
-- To be added
-
----
